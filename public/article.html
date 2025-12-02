@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unitage Reader</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Merriweather', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: '#8B1E1E',
+                        paper: '#FAFAF9',
+                        ink: '#1C1917',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #E7E5E4; border-radius: 20px; }
+        .toc-link.active { color: #8B1E1E; border-left-color: #8B1E1E; background-color: #FEF2F2; font-weight: 600; }
+        
+        /* Typography for dynamic content */
+        .prose h2 { font-family: 'Merriweather', serif; font-size: 1.875rem; font-weight: 700; margin-top: 2em; margin-bottom: 1em; color: #1C1917; }
+        .prose h3 { font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 600; margin-top: 1.5em; margin-bottom: 0.75em; color: #292524; }
+        .prose p { margin-bottom: 1.25em; line-height: 1.75; color: #44403C; }
+        .prose ul { list-style-type: disc; padding-left: 1.625em; margin-bottom: 1.25em; }
+        .prose li { margin-bottom: 0.5em; }
+    </style>
+</head>
+<body class="bg-paper text-ink font-sans antialiased selection:bg-red-100 selection:text-red-900">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-paper/80 backdrop-blur-md border-b border-stone-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="index.html" class="font-serif font-bold text-2xl tracking-tight flex items-center gap-2">
+                    <span class="w-8 h-8 bg-primary text-white flex items-center justify-center rounded-sm text-lg">U</span>
+                    Unitage
+                </a>
+                <div class="flex space-x-4">
+                    <a href="admin.html" class="text-xs font-mono text-stone-400 hover:text-stone-900">Admin Login</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading State -->
+    <div id="loader" class="fixed inset-0 z-40 bg-paper flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-stone-200 border-t-primary rounded-full animate-spin mb-4"></div>
+        <p class="font-serif text-stone-500 animate-pulse">Загружаем историю...</p>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div id="app-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 opacity-0 transition-opacity duration-500">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-12">
+            
+            <!-- Left Sidebar: TOC -->
+            <aside class="hidden lg:block lg:col-span-3">
+                <div class="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar pr-4">
+                    <h4 class="font-serif font-bold text-stone-900 mb-4 text-sm uppercase tracking-wider opacity-70">Содержание</h4>
+                    <nav id="toc" class="space-y-1 text-sm border-l border-stone-200">
+                        <!-- Dynamic TOC -->
+                    </nav>
+                    
+                    <div class="mt-8 pt-8 border-t border-stone-200" id="meta-sidebar">
+                        <!-- Dynamic Meta -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center: Main Article -->
+            <main class="lg:col-span-7">
+                <!-- Article Header -->
+                <header class="mb-10">
+                    <div class="flex items-center gap-3 mb-4" id="article-tags">
+                        <!-- Tags -->
+                    </div>
+                    <h1 id="article-title" class="font-serif text-4xl md:text-5xl font-black text-stone-900 leading-tight mb-6">
+                        <!-- Title -->
+                    </h1>
+                    <div class="flex items-center gap-4 text-stone-500 text-sm border-b border-stone-200 pb-8">
+                        <div class="flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center font-serif font-bold text-stone-600">A</span>
+                            <span>Аналитический отдел</span>
+                        </div>
+                        <span>•</span>
+                        <time id="article-date"></time>
+                    </div>
+                </header>
+
+                <!-- Content Body -->
+                <article id="article-body" class="prose prose-stone prose-lg max-w-none font-serif">
+                    <!-- Main Content -->
+                </article>
+
+                <!-- Perspectives Section (The "Deep Analysis") -->
+                <section id="perspectives-section" class="mt-16 pt-10 border-t-2 border-stone-100 hidden">
+                    <h2 class="font-serif text-2xl font-bold mb-8 text-stone-900 flex items-center gap-3">
+                        <span class="text-3xl">💎</span> Многогранный анализ
+                    </h2>
+                    <div id="perspectives-grid" class="space-y-8">
+                        <!-- Perspectives injected here -->
+                    </div>
+                </section>
+            </main>
+
+            <!-- Right Sidebar (Timeline) -->
+            <aside class="hidden xl:block xl:col-span-2">
+                <div class="sticky top-24">
+                    <h4 class="font-serif font-bold text-stone-900 mb-4 text-sm uppercase tracking-wider opacity-70">Хронология</h4>
+                    <ul id="timeline-list" class="space-y-4 relative border-l border-stone-200 ml-2 pl-4">
+                        <!-- Timeline events -->
+                    </ul>
+                </div>
+            </aside>
+
+        </div>
+    </div>
+
+    <script>
+        async function init() {
+            // 1. Get Slug
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('slug') || 'second-punic-war'; // Default fallback
+
+            try {
+                // 2. Fetch Data
+                const response = await fetch(`/api/articles/${slug}`);
+                
+                if (!response.ok) {
+                    if(response.status === 404) throw new Error("Статья не найдена");
+                    throw new Error("Ошибка сервера");
+                }
+                
+                const data = await response.json();
+
+                // 3. Render Header
+                document.title = `${data.title} - Unitage`;
+                document.getElementById('article-title').textContent = data.title;
+                document.getElementById('article-date').textContent = new Date(data.published_at || Date.now()).toLocaleDateString('ru-RU', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+                
+                const tagsContainer = document.getElementById('article-tags');
+                if (data.category) {
+                    tagsContainer.innerHTML = `<span class="px-2 py-1 bg-stone-200 text-stone-700 text-xs font-semibold uppercase tracking-wide rounded-md">${data.category}</span>`;
+                }
+
+                // 4. Render Body
+                // Note: In a real app, sanitize this HTML!
+                document.getElementById('article-body').innerHTML = data.content;
+
+                // 5. Render Perspectives
+                if (data.perspectives && data.perspectives.length > 0) {
+                    const pSection = document.getElementById('perspectives-section');
+                    const pGrid = document.getElementById('perspectives-grid');
+                    pSection.classList.remove('hidden');
+
+                    data.perspectives.forEach(p => {
+                        const div = document.createElement('div');
+                        
+                        // Style based on type
+                        let borderColor = 'border-stone-300';
+                        let bgColor = 'bg-stone-50';
+                        let icon = 'fas fa-lightbulb';
+                        let titleColor = 'text-stone-800';
+
+                        if (p.type === 'economic') {
+                            borderColor = 'border-green-500';
+                            bgColor = 'bg-green-50';
+                            icon = 'fas fa-coins';
+                            titleColor = 'text-green-900';
+                        } else if (p.type === 'opponent') {
+                            borderColor = 'border-red-500';
+                            bgColor = 'bg-red-50';
+                            icon = 'fas fa-chess-knight';
+                            titleColor = 'text-red-900';
+                        } else if (p.type === 'cultural') {
+                            borderColor = 'border-purple-500';
+                            bgColor = 'bg-purple-50';
+                            icon = 'fas fa-landmark';
+                            titleColor = 'text-purple-900';
+                        }
+
+                        div.className = `p-6 rounded-lg border-l-4 ${borderColor} ${bgColor} not-prose transition-all hover:shadow-sm`;
+                        div.innerHTML = `
+                            <h3 class="font-sans font-bold text-lg ${titleColor} mb-2 flex items-center gap-2">
+                                <i class="${icon}"></i>
+                                ${p.title || 'Аналитика'}
+                            </h3>
+                            <p class="text-stone-700 text-base font-sans leading-relaxed">
+                                ${p.content}
+                            </p>
+                        `;
+                        pGrid.appendChild(div);
+                    });
+                }
+
+                // 6. Generate TOC (Run AFTER content injection)
+                generateTOC();
+
+                // 7. Show Content
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('opacity-0');
+
+            } catch (err) {
+                document.getElementById('loader').innerHTML = `
+                    <div class="text-center">
+                        <h2 class="text-2xl font-bold text-stone-900 mb-2">Ошибка 404</h2>
+                        <p class="text-stone-600">${err.message}</p>
+                        <a href="index.html" class="mt-4 inline-block text-primary underline">Вернуться на главную</a>
+                    </div>
+                `;
+            }
+        }
+
+        function generateTOC() {
+            const article = document.getElementById('article-body');
+            const tocContainer = document.getElementById('toc');
+            const headers = article.querySelectorAll('h2, h3');
+            
+            headers.forEach(header => {
+                const id = header.id || header.textContent.toLowerCase().replace(/[^a-zа-я0-9]+/g, '-');
+                header.id = id;
+                
+                const link = document.createElement('a');
+                link.href = `#${id}`;
+                link.textContent = header.textContent;
+                link.className = `toc-link block py-1.5 px-4 border-l-2 border-transparent hover:border-stone-400 hover:text-primary transition-all duration-200 text-stone-500 ${header.tagName === 'H3' ? 'pl-8 text-xs' : ''}`;
+                
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    header.scrollIntoView({ behavior: 'smooth' });
+                });
+                
+                tocContainer.appendChild(link);
+            });
+
+            // ScrollSpy
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const link = document.querySelector(`.toc-link[href="#${id}"]`);
+                    if (entry.isIntersecting) {
+                        document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+                        if (link) link.classList.add('active');
+                    }
+                });
+            }, { rootMargin: '-20% 0px -60% 0px' });
+
+            headers.forEach(header => observer.observe(header));
+        }
+
+        // Start
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

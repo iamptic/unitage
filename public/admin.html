@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unitage Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-stone-50 font-sans text-stone-900">
+
+    <div id="login-screen" class="flex h-screen items-center justify-center">
+        <form onsubmit="event.preventDefault(); login()" class="bg-white p-8 rounded-lg shadow-lg w-96">
+            <h2 class="text-2xl font-bold mb-6 text-center">Вход в Unitage</h2>
+            <input type="password" id="password" placeholder="Пароль" class="w-full p-3 border border-stone-300 rounded mb-4 focus:outline-none focus:border-red-800" autofocus>
+            <button type="submit" class="w-full bg-red-800 text-white py-3 rounded font-semibold hover:bg-red-900 transition">Войти</button>
+            <p class="mt-4 text-xs text-center text-stone-400">Пароль: admin123</p>
+        </form>
+    </div>
+
+    <div id="admin-panel" class="hidden min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-stone-900 text-stone-300 fixed h-full flex flex-col">
+            <div class="p-6 text-white font-bold text-xl border-b border-stone-800">Unitage OS</div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" class="block px-4 py-2 bg-stone-800 text-white rounded">📝 Новая статья</a>
+                <a href="#" class="block px-4 py-2 hover:bg-stone-800 rounded">📚 Все статьи</a>
+                <a href="#" class="block px-4 py-2 hover:bg-stone-800 rounded">🤖 AI Агенты</a>
+            </nav>
+            <div class="p-4 border-t border-stone-800 text-xs text-stone-500">
+                v2.0 Beta
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="ml-64 p-12 max-w-5xl">
+            <header class="flex justify-between items-center mb-10">
+                <h1 class="text-3xl font-bold">Новая статья</h1>
+                <div class="flex gap-3">
+                    <button onclick="openJsonModal()" class="flex items-center gap-2 px-4 py-3 bg-stone-800 text-white rounded hover:bg-stone-700 transition">
+                        <span>📥</span> Импорт JSON
+                    </button>
+                </div>
+            </header>
+
+            <!-- JSON Modal -->
+            <div id="json-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-lg shadow-xl w-[600px] max-w-full">
+                    <h3 class="text-xl font-bold mb-4">Вставьте JSON</h3>
+                    <p class="text-xs text-stone-500 mb-2">Формат: { title, slug, category, summary, content, perspectives: [{type, title, content}] }</p>
+                    <textarea id="json-input" rows="10" class="w-full p-3 border border-stone-300 rounded font-mono text-xs mb-4" placeholder='{"title": "..."}'></textarea>
+                    <div class="flex justify-end gap-3">
+                        <button onclick="closeJsonModal()" class="px-4 py-2 text-stone-600 hover:bg-stone-100 rounded">Отмена</button>
+                        <button onclick="applyJson()" class="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800">Применить</button>
+                    </div>
+                </div>
+            </div>
+
+            <form id="article-form" class="space-y-8 bg-white p-8 rounded-xl shadow-sm border border-stone-200">
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-stone-600">Заголовок</label>
+                        <input type="text" id="title" class="w-full p-3 border border-stone-200 rounded bg-stone-50 focus:bg-white transition" placeholder="Например: Падение Рима">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-stone-600">Slug (URL)</label>
+                        <input type="text" id="slug" class="w-full p-3 border border-stone-200 rounded bg-stone-50 font-mono text-sm" placeholder="fall-of-rome">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold mb-2 text-stone-600">Категория</label>
+                    <select id="category" class="w-full p-3 border border-stone-200 rounded bg-stone-50">
+                        <option>Античность</option>
+                        <option>Средневековье</option>
+                        <option>Новое время</option>
+                        <option>XX Век</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold mb-2 text-stone-600">Краткое описание (для карточки)</label>
+                    <textarea id="summary" rows="3" class="w-full p-3 border border-stone-200 rounded bg-stone-50"></textarea>
+                </div>
+
+                <!-- Perspectives Block (The "Unitage" Feature) -->
+                <div class="border-t border-stone-100 pt-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="bg-stone-200 text-stone-700 px-2 rounded text-sm">Перспективы</span>
+                    </h3>
+                    
+                    <div class="bg-stone-50 p-6 rounded-lg border border-stone-200 mb-4">
+                        <div class="flex justify-between mb-2">
+                            <label class="text-xs font-bold uppercase text-stone-500">Основной нарратив</label>
+                        </div>
+                        <textarea id="content" rows="10" class="w-full p-4 border border-stone-200 rounded text-sm font-mono" placeholder="# Введение..."></textarea>
+                    </div>
+
+                    <div id="perspectives-container">
+                        <!-- AI generated perspectives will appear here -->
+                    </div>
+                    
+                    <button type="button" onclick="addPerspective()" class="text-sm text-red-800 font-medium hover:underline">+ Добавить перспективу вручную</button>
+                </div>
+
+                <div class="flex justify-end pt-6">
+                    <button type="submit" class="px-8 py-3 bg-stone-900 text-white font-bold rounded hover:bg-black transition">Опубликовать</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        function login() {
+            const pass = document.getElementById('password').value;
+            if (pass === 'admin123') { // Hardcoded for MVP demo
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+            } else {
+                alert('Неверный пароль');
+            }
+        }
+
+        // JSON Modal Logic
+        function openJsonModal() { document.getElementById('json-modal').classList.remove('hidden'); }
+        function closeJsonModal() { document.getElementById('json-modal').classList.add('hidden'); }
+        
+        function applyJson() {
+            try {
+                const raw = document.getElementById('json-input').value;
+                const data = JSON.parse(raw);
+                
+                // Fill basic fields
+                if(data.title) document.getElementById('title').value = data.title;
+                if(data.slug) document.getElementById('slug').value = data.slug;
+                if(data.category) document.getElementById('category').value = data.category;
+                if(data.summary) document.getElementById('summary').value = data.summary;
+                if(data.content) document.getElementById('content').value = data.content;
+
+                // Clear and Fill Perspectives
+                if(data.perspectives && Array.isArray(data.perspectives)) {
+                    const container = document.getElementById('perspectives-container');
+                    container.innerHTML = ''; // Clear existing
+                    
+                    data.perspectives.forEach(p => {
+                        addPerspective(); // Add DOM element
+                        // Get the last added block
+                        const block = container.lastElementChild;
+                        const inputs = block.querySelectorAll('input');
+                        const textarea = block.querySelector('textarea');
+                        
+                        inputs[0].value = p.type || 'context';
+                        inputs[1].value = p.title || '';
+                        textarea.value = p.content || '';
+                    });
+                }
+
+                closeJsonModal();
+                alert('Данные успешно загружены!');
+            } catch (e) {
+                alert('Ошибка чтения JSON: ' + e.message);
+            }
+        }
+
+        function addPerspective() {
+            const container = document.getElementById('perspectives-container');
+            const div = document.createElement('div');
+            div.className = 'bg-stone-50 p-6 rounded-lg border border-stone-200 mb-4 relative';
+            div.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 mb-3">
+                    <input type="text" placeholder="Тип (напр. Экономика)" class="p-2 border rounded text-sm">
+                    <input type="text" placeholder="Заголовок блока" class="p-2 border rounded text-sm">
+                </div>
+                <textarea rows="5" class="w-full p-3 border border-stone-200 rounded text-sm" placeholder="Текст анализа..."></textarea>
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-stone-400 hover:text-red-600">&times;</button>
+            `;
+            container.appendChild(div);
+        }
+
+        async function generateAnalysis() {
+            const topic = document.getElementById('title').value;
+            if (!topic) {
+                alert('Введите заголовок темы для анализа');
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="generateAnalysis()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span> Думаю...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/admin/generate-analysis', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ topic })
+                });
+                const data = await response.json();
+                
+                alert(data.preview + '\\n\\nПредложенные углы обзора:\\n' + data.suggested_perspectives.join('\\n'));
+                
+                // Simulation of populating fields
+                document.getElementById('summary').value = `Автоматически сгенерированное описание для темы "${topic}"...`;
+                
+                // Simulate AI agents working
+                addPerspective();
+                const pInputs = document.getElementById('perspectives-container').lastElementChild.querySelectorAll('input');
+                pInputs[0].value = "Экономический взгляд";
+                pInputs[1].value = "Цена конфликта";
+                
+            } catch (e) {
+                alert('Ошибка AI: ' + e.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('article-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // Here we would gather all data and send to /api/admin/articles
+            const formData = {
+                title: document.getElementById('title').value,
+                slug: document.getElementById('slug').value,
+                category: document.getElementById('category').value,
+                summary: document.getElementById('summary').value,
+                content: document.getElementById('content').value
+            };
+
+            try {
+                const res = await fetch('/api/admin/articles', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Статья создана! ID: ' + result.id);
+                } else {
+                    alert('Ошибка создания');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Ошибка сети');
+            }
+        });
+    </script>
+</body>
+</html>
