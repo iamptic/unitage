@@ -103,14 +103,50 @@
                     <button type="button" onclick="addPerspective()" class="text-sm text-red-800 font-medium hover:underline">+ Добавить перспективу вручную</button>
                 </div>
 
-                <div class="flex justify-end pt-6">
-                    <button type="submit" class="px-8 py-3 bg-stone-900 text-white font-bold rounded hover:bg-black transition">Опубликовать</button>
+                <div class="flex justify-end pt-6 gap-4">
+                    <div class="text-xs text-stone-500 text-right max-w-xs">
+                        * В режиме "Статический JSON" данные нельзя сохранить напрямую.
+                        Сгенерируйте JSON и добавьте его в файл <code>src/articles.json</code> вручную.
+                    </div>
+                    <button type="button" onclick="copyJSON()" class="px-8 py-3 bg-green-700 text-white font-bold rounded hover:bg-green-800 transition">📋 Скопировать JSON</button>
                 </div>
             </form>
         </main>
     </div>
 
     <script>
+        function copyJSON() {
+             const formData = {
+                id: Date.now(), // Fake ID
+                title: document.getElementById('title').value,
+                slug: document.getElementById('slug').value,
+                category: document.getElementById('category').value,
+                published_at: new Date().toISOString(),
+                summary: document.getElementById('summary').value,
+                content: document.getElementById('content').value,
+                perspectives: []
+            };
+
+            // Collect perspectives
+            const container = document.getElementById('perspectives-container');
+            container.childNodes.forEach(node => {
+                if(node.tagName === 'DIV') {
+                    const inputs = node.querySelectorAll('input');
+                    const textarea = node.querySelector('textarea');
+                    formData.perspectives.push({
+                        type: inputs[0].value,
+                        title: inputs[1].value,
+                        content: textarea.value
+                    });
+                }
+            });
+
+            const jsonString = JSON.stringify(formData, null, 2);
+            navigator.clipboard.writeText(jsonString).then(() => {
+                alert('JSON скопирован в буфер обмена!\nВставьте его в массив в файле src/articles.json');
+            });
+        }
+
         function login() {
             const pass = document.getElementById('password').value;
             if (pass === 'admin123') { // Hardcoded for MVP demo
